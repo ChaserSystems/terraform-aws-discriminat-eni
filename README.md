@@ -20,5 +20,5 @@
 
 ## Next Steps
 
-* [Understand how to configure the enhanced Security Groups](https://chasersystems.com/discrimiNAT/aws/quick-start/#vii-security-groups) after deployment from our main documentation.
+* [Understand how to configure the enhanced Security Groups](https://chasersystems.com/discrimiNAT/aws/quick-start/#vii-security-groups) after deployment, from our main documentation.
 * Contact our DevSecOps at devsecops@chasersystems.com for queries at any stage of your journey.
