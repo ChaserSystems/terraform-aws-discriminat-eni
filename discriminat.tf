@@ -2,7 +2,7 @@
 
 variable "public_subnets" {
   type        = list(string)
-  description = "The IDs of the Public Subnets to deploy the discrimiNAT firewall instances in. These must have routing to the Internet via an [Internet Gateway](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Internet_Gateway.html) already."
+  description = "The IDs of the Public Subnets to deploy the discrimiNAT firewall instances in. These must have routing to the Internet via an Internet Gateway already."
 }
 
 ##
@@ -156,7 +156,7 @@ resource "aws_launch_template" "discriminat" {
   }
 
   key_name  = var.key_pair_name == "" ? null : var.key_pair_name
-  user_data = var.startup_script_base64 == "" ? null : base64decode(var.startup_script_base64)
+  user_data = var.startup_script_base64 == "" ? null : var.startup_script_base64
 
   tags = local.tags
 }
