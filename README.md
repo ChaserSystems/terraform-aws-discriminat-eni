@@ -22,3 +22,77 @@
 
 * [Understand how to configure the enhanced Security Groups](https://chasersystems.com/discrimiNAT/aws/quick-start/#vii-security-groups) after deployment, from our main documentation.
 * Contact our DevSecOps at devsecops@chasersystems.com for queries at any stage of your journey.
+
+## Post-deployment Security Group Example
+
+```hcl
+resource "aws_security_group" "foo" {
+  # You could use a data source or get a reference from another resource for the VPC ID.
+  vpc_id = "vpc-1234example5678"
+}
+
+resource "aws_security_group_rule" "saas_monitoring" {
+  security_group_id = aws_security_group.foo.id
+
+  type      = "egress"
+  from_port = 443
+  to_port   = 443
+  protocol  = "tcp"
+
+  # The discrimiNAT firewall will apply its own checks anyway, so you could
+  # choose to leave this wide open without worry.
+  cidr_blocks = ["0.0.0.0/0"]
+
+  # You could simply embed the allowed FQDNs, comma-separated, like below.
+  # Full syntax at https://chasersystems.com/discrimiNAT/aws/quick-start/#vii-security-groups
+  description = "discriminat:tls:app.datadoghq.com,collector.newrelic.com"
+}
+
+locals {
+  # Or you could store allowed FQDNs as a list...
+  fqdns_sftp_banks = [
+    "sftp.bank1.com",
+    "sftp.bank2.com"
+  ]
+  fqdns_saas_auth = [
+    "foo.auth0.com",
+    "mtls.okta.com"
+  ]
+}
+
+locals {
+  # ...and format them into the expected syntax.
+  discriminat_sftp_banks = format("discriminat:ssh:%s", join(",", local.fqdns_sftp_banks))
+  discriminat_saas_auth  = format("discriminat:tls:%s", join(",", local.fqdns_saas_auth))
+}
+
+resource "aws_security_group_rule" "saas_auth" {
+  security_group_id = aws_security_group.foo.id
+
+  type      = "egress"
+  from_port = 443
+  to_port   = 443
+  protocol  = "tcp"
+
+  # Note that AWS does not allow multiple Rules with the same protocol/port/cidr combination, so
+  # we just choose a different network prefix to get around that. That is, if /0 had already been
+  # used, we'll pick /1 or anything uptil /32 really.
+  cidr_blocks = ["0.0.0.0/1"]
+
+  # Use of FQDNs list formatted into the expected syntax.
+  description = local.discriminat_saas_auth
+}
+
+resource "aws_security_group_rule" "sftp_banks" {
+  security_group_id = aws_security_group.foo.id
+
+  type        = "egress"
+  from_port   = 22
+  to_port     = 22
+  protocol    = "tcp"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  # Use of FQDNs list formatted into the expected syntax.
+  description = local.discriminat_sftp_banks
+}
+```
