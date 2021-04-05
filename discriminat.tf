@@ -11,7 +11,7 @@ variable "public_subnets" {
 
 variable "elastic_ips" {
   type        = list(string)
-  description = "Specific, pre-allocated Elastic IP addresses if you wish to use these for egress, NATed traffic. If none specified, ephemeral public IP addressess will be allocated automatically. If specifed, should be equal to the number of public subnets."
+  description = "Specific, pre-allocated Elastic IP addresses if you wish to use these for egress, NATed traffic. If none specified, ephemeral public IP addressess will be allocated automatically. If specifed, should be equal to the number of public subnets and NOT be associated with other instances or NAT Gateways."
   default     = []
 }
 
@@ -23,7 +23,7 @@ variable "tags" {
 
 variable "instance_size" {
   type        = string
-  description = "The default of t3.small should suffice for light to medium levels of usage. Anything less than 2 CPU cores and 2 GB of RAM is not recommended. For faster access to the Internet and for accounts with a large number of VMs, you may want to choose a machine type with more CPU cores."
+  description = "The default of t3.small should suffice for light to medium levels of usage. Anything less than 2 CPU cores and 2 GB of RAM is not recommended. For faster access to the Internet and for accounts with a large number of VMs, you may want to choose a machine type with more CPU cores. Valid values are t3.small , t3.xlarge , c5.large , c5.xlarge , c5.2xlarge and c5.4xlarge ."
   default     = "t3.small"
 }
 
@@ -299,7 +299,7 @@ locals {
 output "target_network_interfaces" {
   value = { for i, z in data.aws_subnet.public_subnet :
   z.availability_zone => aws_network_interface.static_egress[i].id }
-  description = "Map of zones to ENI IDs suitable for setting as targets in private routing tables."
+  description = "Map of zones to ENI IDs suitable for setting as targets in routing tables of Private Subnets."
 }
 
 ##

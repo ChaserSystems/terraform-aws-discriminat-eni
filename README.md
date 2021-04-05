@@ -1,10 +1,14 @@
 # discrimiNAT, ENI architecture
 
-[discrimiNAT firewall](https://chasersystems.com/discrimiNAT/) for egress filtering by FQDNs on AWS. Just specify the allowed destination hostnames in the applications' native Security Groups and the firewall will take care of the rest.
+[discrimiNAT firewall](https://chasersystems.com/discrimiNAT/) for egress filtering by FQDNs on AWS. Just specify the allowed destination hostnames in the respective applications' native Security Groups and the firewall will take care of the rest.
 
 **Architecture with [ENIs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html) in VPCs for Private Subnets' route table entries to the Internet.**
 
 [Demo Videos](https://chasersystems.com/discrimiNAT/demo/) | [discrimiNAT FAQ](https://chasersystems.com/discrimiNAT/faq/)
+
+## _Pentest_ Ready
+
+discrimiNAT enforces the use of contemporary encryption standards such as TLS 1.2+ and SSH v2 with bidirectional in-band checks. Anything older or insecure will be denied connection automatically. Also conducts out-of-band checks, such as DNS, for robust defence against sophisticated malware and insider threats. Gets your VPC ready for a proper _pentest_!
 
 ## Highlights
 
@@ -14,18 +18,20 @@
 
 ## Considerations
 
-* A deployment per zone is advised.
+* A deployment per zone is advised, just like the AWS NAT Gateways — which are not needed with discrimiNAT deployed.
 * VMs _without_ public IPs will need to be in a subnet (typically the Private Subnet) with routing through the ENIs created by this module to access the Internet at all.
 * You must be subscribed to the [discrimiNAT firewall from the AWS Marketplace](https://aws.amazon.com/marketplace/pp/B07YLBH34R?ref=_ptnr_gthb).
 
 ## Next Steps
 
 * [Understand how to configure the enhanced Security Groups](https://chasersystems.com/discrimiNAT/aws/quick-start/#vii-security-groups) after deployment, from our main documentation.
-* Contact our DevSecOps at devsecops@chasersystems.com for queries at any stage of your journey.
+* Contact our DevSecOps at devsecops@chasersystems.com for queries at any stage of your journey — even on the eve of a _pentest_!
 
 ## Post-deployment Security Group Example
 
 ```hcl
+# This Security Group must be associated with its intended, respective application - whether that is
+# in EC2, Fargate or EKS, etc. as long as a Security Group can be associated with it.
 resource "aws_security_group" "foo" {
   # You could use a data source or get a reference from another resource for the VPC ID.
   vpc_id = "vpc-1234example5678"
