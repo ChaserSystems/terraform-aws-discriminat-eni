@@ -8,3 +8,8 @@ module "discriminat" {
     "foo" = "bar"
   }
 }
+
+output "target_network_interfaces" {
+  value       = module.discriminat.target_network_interfaces
+  description = "Map of zones to ENI IDs suitable for setting as targets in routing tables of Private Subnets."
+}
