@@ -226,7 +226,7 @@ resource "aws_iam_policy" "discriminat" {
         {
             "Effect": "Allow",
             "Action": [
-                "ec2:DescribeInstances",
+                "ec2:DescribeNetworkInterfaces",
                 "ec2:DescribeSecurityGroups"
             ],
             "Resource": "*"
