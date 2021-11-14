@@ -299,7 +299,7 @@ locals {
 output "target_network_interfaces" {
   value = { for i, z in data.aws_subnet.public_subnet :
   z.availability_zone => aws_network_interface.static_egress[i].id }
-  description = "Map of zones to ENI IDs suitable for setting as targets in routing tables of Private Subnets."
+  description = "Map of zones to ENI IDs suitable for setting as Network Interface targets in routing tables of Private Subnets. A Terraform example of using these in an \"aws_route\" resource can be found at https://github.com/ChaserSystems/terraform-aws-discriminat-eni/blob/main/examples/aws_vpc/example.tf#L20-L27"
 }
 
 ##
