@@ -11,7 +11,7 @@ variable "public_subnets" {
 
 variable "elastic_ips" {
   type        = list(string)
-  description = "Specific, pre-allocated Elastic IP addresses if you wish to use these for egress, NATed traffic. If none specified, ephemeral public IP addressess will be allocated automatically. If specifed, should be equal to the number of public subnets and NOT be associated with other instances or NAT Gateways."
+  description = "Specific, pre-allocated Elastic IP addresses if you wish to use these for egress, NATed traffic. If none specified, ephemeral public IP addressess will be allocated automatically. If specifed, should be equal to the number of public subnets and NOT be associated with other instances or NAT Gateways. For example: [\"198.51.100.5\", \"203.0.113.2\"]"
   default     = []
 }
 
