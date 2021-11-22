@@ -294,6 +294,21 @@ locals {
 
 ##
 
+## Constraints
+
+terraform {
+  required_version = "> 1, < 2"
+
+  required_providers {
+    google = {
+      source  = "hashicorp/aws"
+      version = "> 3, < 4"
+    }
+  }
+}
+
+##
+
 ## Outputs
 
 output "target_network_interfaces" {

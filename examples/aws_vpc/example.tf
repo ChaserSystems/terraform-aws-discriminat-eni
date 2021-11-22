@@ -1,6 +1,6 @@
 module "aws_vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 2"
+  version = "> 2, < 3"
 
   name = "discrimiNATed"
 
