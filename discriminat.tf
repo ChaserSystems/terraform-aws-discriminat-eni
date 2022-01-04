@@ -300,7 +300,7 @@ terraform {
   required_version = "> 1, < 2"
 
   required_providers {
-    google = {
+    aws = {
       source  = "hashicorp/aws"
       version = "> 3, < 4"
     }
