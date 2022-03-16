@@ -9,12 +9,6 @@ variable "public_subnets" {
 
 ## Defaults
 
-variable "elastic_ips" {
-  type        = list(string)
-  description = "Specific, pre-allocated Elastic IP addresses if you wish to use these for egress, NATed traffic. If none specified, ephemeral public IP addressess will be allocated automatically. If specifed, should be equal to the number of public subnets and NOT be associated with other instances or NAT Gateways. For example: [\"198.51.100.5\", \"203.0.113.2\"]"
-  default     = []
-}
-
 variable "tags" {
   type        = map(any)
   description = "Map of key-value tag pairs to apply to resources created by this module. See examples for use."
@@ -30,24 +24,30 @@ variable "instance_size" {
 variable "key_pair_name" {
   type        = string
   description = "Strongly suggested to leave this to the default, that is to NOT associate any key-pair with the instances. In case SSH access is desired, provide the name of a valid EC2 Key Pair."
-  default     = ""
+  default     = null
 }
 
 variable "startup_script_base64" {
   type        = string
   description = "Strongly suggested to NOT run custom, startup scripts on the firewall instances. But if you had to, supply a base64 encoded version here."
-  default     = ""
+  default     = null
+}
+
+variable "ami_owner" {
+  type        = string
+  description = "Reserved for use with Chaser support. Allows overriding the source AMI account for discrimiNAT."
+  default     = null
+}
+
+variable "ami_name" {
+  type        = string
+  description = "Reserved for use with Chaser support. Allows overriding the source AMI version for discrimiNAT."
+  default     = null
 }
 
 ##
 
 ## Lookups
-
-data "aws_eip" "elastic_ip" {
-  count = length(var.elastic_ips)
-
-  public_ip = var.elastic_ips[count.index]
-}
 
 data "aws_subnet" "public_subnet" {
   count = length(var.public_subnets)
@@ -60,7 +60,7 @@ data "aws_vpc" "context" {
 }
 
 data "aws_ami" "discriminat" {
-  owners      = ["aws-marketplace"]
+  owners      = [var.ami_owner == null ? "aws-marketplace" : var.ami_owner]
   most_recent = true
 
   filter {
@@ -69,8 +69,8 @@ data "aws_ami" "discriminat" {
   }
 
   filter {
-    name   = "product-code"
-    values = ["a83las5cq95zkg3x8i17x6wyy"]
+    name   = var.ami_owner == null ? "product-code" : "name"
+    values = [var.ami_owner == null ? "a83las5cq95zkg3x8i17x6wyy" : var.ami_name]
   }
 }
 
@@ -87,13 +87,6 @@ resource "aws_network_interface" "static_egress" {
   security_groups = [aws_security_group.discriminat.id]
 
   tags = local.tags
-}
-
-resource "aws_eip_association" "static_egress" {
-  count = length(data.aws_eip.elastic_ip)
-
-  network_interface_id = aws_network_interface.static_egress[count.index].id
-  allocation_id        = data.aws_eip.elastic_ip[count.index].id
 }
 
 resource "aws_security_group" "discriminat" {
@@ -142,6 +135,14 @@ resource "aws_launch_template" "discriminat" {
     http_tokens   = "required"
   }
 
+  block_device_mappings {
+    device_name = data.aws_ami.discriminat.root_device_name
+    ebs {
+      encrypted   = true
+      volume_size = tolist(data.aws_ami.discriminat.block_device_mappings)[0].ebs.volume_size
+    }
+  }
+
   network_interfaces {
     network_interface_id = aws_network_interface.static_egress[count.index].id
   }
@@ -155,8 +156,8 @@ resource "aws_launch_template" "discriminat" {
     tags          = local.tags
   }
 
-  key_name  = var.key_pair_name == "" ? null : var.key_pair_name
-  user_data = var.startup_script_base64 == "" ? null : var.startup_script_base64
+  key_name  = var.key_pair_name
+  user_data = var.startup_script_base64
 
   tags = local.tags
 }
@@ -227,7 +228,9 @@ resource "aws_iam_policy" "discriminat" {
             "Effect": "Allow",
             "Action": [
                 "ec2:DescribeNetworkInterfaces",
-                "ec2:DescribeSecurityGroups"
+                "ec2:DescribeSecurityGroups",
+                "ec2:DescribeAddresses",
+                "ec2:AssociateAddress"
             ],
             "Resource": "*"
         }
@@ -282,7 +285,7 @@ locals {
   tags = merge(
     {
       "Name" : "discrimiNAT",
-      "documentation" : "https://chasersystems.com/discrimiNAT/aws/"
+      "documentation" : "https://chasersystems.com/docs/discriminat/aws/installation-overview"
     },
     var.tags
   )
@@ -314,7 +317,7 @@ terraform {
 output "target_network_interfaces" {
   value = { for i, z in data.aws_subnet.public_subnet :
   z.availability_zone => aws_network_interface.static_egress[i].id }
-  description = "Map of zones to ENI IDs suitable for setting as Network Interface targets in routing tables of Private Subnets. A Terraform example of using these in an \"aws_route\" resource can be found at https://github.com/ChaserSystems/terraform-aws-discriminat-eni/blob/main/examples/aws_vpc/example.tf#L20-L27"
+  description = "Map of zones to ENI IDs suitable for setting as Network Interface targets in routing tables of Private Subnets. A Terraform example of using these in an \"aws_route\" resource can be found at https://github.com/ChaserSystems/terraform-aws-discriminat-eni/blob/main/examples/aws_vpc/example.tf"
 }
 
 ##
