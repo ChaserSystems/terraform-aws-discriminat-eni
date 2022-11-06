@@ -37,7 +37,7 @@ ec2:DescribeAddresses
 ec2:AssociateAddress
 ```
 
-An EC2 VPC Endpoint is needed for this mechanism to work though – since making the association needs access to the EC2 API. In the [aws_vpc example](examples/aws_vpc/), this is demonstrated by deploying the endpoint alongwith with the VPC.
+An EC2 VPC Endpoint is needed for this mechanism to work though – since making the association needs access to the EC2 API. In the [aws_vpc example](examples/aws_vpc/), this is demonstrated by deploying the endpoint along with the VPC.
 
 It is always possible to not choose this mechanism and have a Public IP associated with the network interfaces of the discrimiNAT right from the onset. This also used to be the case before v2.4 of the discrimiNAT.
 

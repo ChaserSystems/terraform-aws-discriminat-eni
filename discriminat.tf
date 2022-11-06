@@ -72,6 +72,11 @@ data "aws_ami" "discriminat" {
     name   = var.ami_owner == null ? "product-code" : "name"
     values = [var.ami_owner == null ? "a83las5cq95zkg3x8i17x6wyy" : var.ami_name]
   }
+
+  filter {
+    name   = "name"
+    values = ["discrimiNAT-2.4.*"]
+  }
 }
 
 ##
