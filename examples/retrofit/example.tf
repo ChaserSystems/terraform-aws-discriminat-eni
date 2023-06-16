@@ -1,6 +1,6 @@
 variable "public_subnets" {
   type        = list(any)
-  description = "List of public subnets to deploy the discrimiNAT firewall in. These would be the same as where a NAT Gateway/Instance would normally be placed in your design and should have their default route set to an Internet Gateway."
+  description = "List of public subnets to deploy the DiscrimiNAT Firewall in. These would be the same as where a NAT Gateway/Instance would normally be placed in your design and should have their default route set to an Internet Gateway."
 }
 
 module "discriminat" {

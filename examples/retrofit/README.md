@@ -1,6 +1,6 @@
-# discrimiNAT, ENI architecture, retrofit example
+# DiscrimiNAT, ENI architecture, retrofit example
 
-Demonstrates how to retrofit discrimiNAT egress filtering in a pre-existing VPC, for chosen zones.
+Demonstrates how to retrofit DiscrimiNAT egress filtering in a pre-existing VPC, for chosen zones.
 
 ## Example
 

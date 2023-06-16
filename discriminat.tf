@@ -2,7 +2,7 @@
 
 variable "public_subnets" {
   type        = list(string)
-  description = "The IDs of the Public Subnets to deploy the discrimiNAT firewall instances in. These must have routing to the Internet via an Internet Gateway already."
+  description = "The IDs of the Public Subnets to deploy the DiscrimiNAT Firewall instances in. These must have routing to the Internet via an Internet Gateway already."
 }
 
 ##
@@ -35,13 +35,13 @@ variable "startup_script_base64" {
 
 variable "ami_owner" {
   type        = string
-  description = "Reserved for use with Chaser support. Allows overriding the source AMI account for discrimiNAT."
+  description = "Reserved for use with Chaser support. Allows overriding the source AMI account for DiscrimiNAT."
   default     = null
 }
 
 variable "ami_name" {
   type        = string
-  description = "Reserved for use with Chaser support. Allows overriding the source AMI version for discrimiNAT."
+  description = "Reserved for use with Chaser support. Allows overriding the source AMI version for DiscrimiNAT."
   default     = null
 }
 
@@ -75,7 +75,7 @@ data "aws_ami" "discriminat" {
 
   filter {
     name   = "name"
-    values = ["discrimiNAT-2.4.*"]
+    values = var.ami_name == null ? ["DiscrimiNAT-2.5.*"] : [var.ami_name]
   }
 }
 
@@ -145,6 +145,7 @@ resource "aws_launch_template" "discriminat" {
     ebs {
       encrypted   = true
       volume_size = tolist(data.aws_ami.discriminat.block_device_mappings)[0].ebs.volume_size
+      volume_type = "gp3"
     }
   }
 
@@ -154,8 +155,9 @@ resource "aws_launch_template" "discriminat" {
 
   tag_specifications {
     resource_type = "instance"
-    tags          = local.tags
+    tags          = merge(local.tags, { "discriminat" : "self-manage" })
   }
+
   tag_specifications {
     resource_type = "volume"
     tags          = local.tags
@@ -182,7 +184,7 @@ resource "aws_autoscaling_group" "discriminat" {
   desired_capacity = 1
 
   default_cooldown          = 1
-  health_check_grace_period = 1
+  health_check_grace_period = 0
   health_check_type         = "EC2"
 
   launch_template {
@@ -194,6 +196,16 @@ resource "aws_autoscaling_group" "discriminat" {
     strategy = "Rolling"
     preferences {
       min_healthy_percentage = 0
+    }
+  }
+
+  dynamic "tag" {
+    for_each = local.tags
+    iterator = i
+    content {
+      key                 = i.key
+      value               = i.value
+      propagate_at_launch = false
     }
   }
 }
@@ -221,7 +233,7 @@ resource "aws_iam_policy" "discriminat" {
                 "logs:DescribeLogStreams"
             ],
             "Resource": [
-                "arn:aws:logs:*:*:log-group:discrimiNAT:log-stream:*"
+                "arn:aws:logs:*:*:log-group:DiscrimiNAT:log-stream:*"
             ]
         },
         {
@@ -234,10 +246,21 @@ resource "aws_iam_policy" "discriminat" {
             "Action": [
                 "ec2:DescribeNetworkInterfaces",
                 "ec2:DescribeSecurityGroups",
-                "ec2:DescribeAddresses",
-                "ec2:AssociateAddress"
+                "ec2:DescribeAddresses"
             ],
             "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:AssociateAddress"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "Null": {
+                    "aws:ResourceTag/discriminat": false
+                }
+            }
         }
     ]
 }
@@ -289,8 +312,8 @@ resource "aws_iam_instance_profile" "discriminat" {
 locals {
   tags = merge(
     {
-      "Name" : "discrimiNAT",
-      "documentation" : "https://chasersystems.com/docs/discriminat/aws/installation-overview"
+      "Name" : "DiscrimiNAT",
+      "documentation" : "https://chasersystems.com/docs/discriminat/aws/installation-overview/"
     },
     var.tags
   )
