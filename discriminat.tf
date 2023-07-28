@@ -17,7 +17,7 @@ variable "tags" {
 
 variable "instance_size" {
   type        = string
-  description = "The default of t3.small should suffice for light to medium levels of usage. Anything less than 2 CPU cores and 2 GB of RAM is not recommended. For faster access to the Internet and for accounts with a large number of VMs, you may want to choose a machine type with more CPU cores. Valid values are t3.small , t3.xlarge , c5.large , c5.xlarge , c5.2xlarge and c5.4xlarge ."
+  description = "The default of t3.small should suffice for light to medium levels of usage. Anything less than 2 CPU cores and 2 GB of RAM is not recommended. For faster access to the Internet and for accounts with a large number of VMs, you may want to choose a machine type with more CPU cores. Valid values are t3.small , c6i.large , c6i.xlarge , c6i.2xlarge , c6a.large , c6a.xlarge , c6a.2xlarge , c5.large , c5.xlarge , c5.2xlarge ."
   default     = "t3.small"
 }
 
@@ -69,13 +69,13 @@ data "aws_ami" "discriminat" {
   }
 
   filter {
-    name   = var.ami_owner == null ? "product-code" : "name"
-    values = [var.ami_owner == null ? "a83las5cq95zkg3x8i17x6wyy" : var.ami_name]
+    name   = var.ami_owner == null ? "product-code" : "owner-id"
+    values = [var.ami_owner == null ? "a83las5cq95zkg3x8i17x6wyy" : var.ami_owner]
   }
 
   filter {
     name   = "name"
-    values = var.ami_name == null ? ["DiscrimiNAT-2.5.*"] : [var.ami_name]
+    values = var.ami_name == null ? ["DiscrimiNAT-2.6.*"] : [var.ami_name]
   }
 }
 
