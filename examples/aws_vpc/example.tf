@@ -9,7 +9,7 @@ module "aws_vpc" {
   enable_dns_support   = true
   enable_dns_hostnames = true
 
-  azs             = ["eu-west-2a", "eu-west-2b"]
+  azs             = ["eu-west-3a", "eu-west-3b"]
   public_subnets  = ["172.16.11.0/24", "172.16.21.0/24"]
   private_subnets = ["172.16.12.0/24", "172.16.22.0/24"]
 

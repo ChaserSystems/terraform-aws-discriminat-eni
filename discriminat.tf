@@ -342,6 +342,11 @@ terraform {
 
 ## Outputs
 
+output "cloudwatch_log_group_name" {
+  value       = "DiscrimiNAT"
+  description = "Name of the CloudWatch Log Group where DiscrimiNAT instances will log traffic flow and configuration changes. Useful for automating any logging routing configuration."
+}
+
 output "target_network_interfaces" {
   value = { for i, z in data.aws_subnet.public_subnet :
   z.availability_zone => aws_network_interface.static_egress[i].id }
