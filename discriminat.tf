@@ -17,7 +17,7 @@ variable "tags" {
 
 variable "instance_size" {
   type        = string
-  description = "The default of t3.small should suffice for light to medium levels of usage. Anything less than 2 CPU cores and 2 GB of RAM is not recommended. For faster access to the Internet and for accounts with a large number of VMs, you may want to choose a machine type with more CPU cores. Valid values are t3.small , c6i.large , c6i.xlarge , c6i.2xlarge , c6a.large , c6a.xlarge , c6a.2xlarge , c5.large , c5.xlarge , c5.2xlarge ."
+  description = "The default of t3.small should suffice for light to medium levels of usage. Anything less than 2 CPU cores and 2 GB of RAM is not recommended. For faster access to the Internet and for accounts with a large number of VMs, you may want to choose a machine type with dedicated CPU cores. Valid values are t3.small , c6i.large , c6i.xlarge , c6a.large , c6a.xlarge ."
   default     = "t3.small"
 }
 
@@ -27,7 +27,7 @@ variable "key_pair_name" {
   default     = null
 }
 
-variable "startup_script_base64" {
+variable "user_data_base64" {
   type        = string
   description = "Strongly suggested to NOT run custom, startup scripts on the firewall instances. But if you had to, supply a base64 encoded version here."
   default     = null
@@ -70,12 +70,12 @@ data "aws_ami" "discriminat" {
 
   filter {
     name   = var.ami_owner == null ? "product-code" : "owner-id"
-    values = [var.ami_owner == null ? "a83las5cq95zkg3x8i17x6wyy" : var.ami_owner]
+    values = [var.ami_owner == null ? "bz1yq0sc5ta99w5j7jjwzym8g" : var.ami_owner]
   }
 
   filter {
     name   = "name"
-    values = var.ami_name == null ? ["DiscrimiNAT-2.6.*"] : [var.ami_name]
+    values = var.ami_name == null ? ["DiscrimiNAT-2.7.*"] : [var.ami_name]
   }
 }
 
@@ -164,7 +164,7 @@ resource "aws_launch_template" "discriminat" {
   }
 
   key_name  = var.key_pair_name
-  user_data = var.startup_script_base64
+  user_data = var.user_data_base64
 
   tags = local.tags
 }
@@ -313,7 +313,7 @@ locals {
   tags = merge(
     {
       "Name" : "DiscrimiNAT",
-      "documentation" : "https://chasersystems.com/docs/discriminat/aws/installation-overview/"
+      "documentation" : "https://chasersystems.com/docs/"
     },
     var.tags
   )
@@ -333,7 +333,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "> 3, < 5"
+      version = "> 3, < 6"
     }
   }
 }
