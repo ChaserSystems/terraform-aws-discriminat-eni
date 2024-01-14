@@ -22,7 +22,7 @@ DiscrimiNAT enforces the use of contemporary encryption standards such as TLS 1.
 
 * A deployment per zone is advised, just like the AWS NAT Gateways – which are not needed with DiscrimiNAT deployed.
 * VMs and Lambdas _without_ public IPs will need to be in a subnet (typically the Private Subnet) with routing through the ENIs created by this module to access the Internet at all.
-* You must be subscribed to the [DiscrimiNAT Firewall from the AWS Marketplace](https://aws.amazon.com/marketplace/pp/prodview-gdrdl5m67w6vg).
+* You must be subscribed to the [DiscrimiNAT Firewall from the AWS Marketplace](https://aws.amazon.com/marketplace/pp/prodview-7ulmdnoq5jnwu).
 
 ## Elastic IPs
 
