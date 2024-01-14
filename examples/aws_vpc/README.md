@@ -1,6 +1,6 @@
 # DiscrimiNAT, ENI architecture, alongside "terraform-aws-modules/vpc/aws" example
 
-Demonstrates how to install DiscrimiNAT egress filtering in a VPC provisioned with the [terraform-aws-modules/vpc/aws](https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws) v2 module from the Terraform Registry.
+Demonstrates how to install DiscrimiNAT egress filtering in a VPC provisioned with the [terraform-aws-modules/vpc/aws](https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws) module from the Terraform Registry.
 
 ## Elastic IPs
 
