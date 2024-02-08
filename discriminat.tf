@@ -45,6 +45,19 @@ variable "ami_name" {
   default     = null
 }
 
+variable "byol" {
+  type        = string
+  sensitive   = true
+  default     = null
+  description = "If using the BYOL version from the marketplace, supply the licence key as supplied by Chaser Systems here."
+}
+
+variable "ashr" {
+  type        = bool
+  default     = true
+  description = "Automated System Health Reporting. See note in README to learn more. Set to false to disable. Default is true and hence enabled."
+}
+
 ##
 
 ## Lookups
@@ -70,7 +83,7 @@ data "aws_ami" "discriminat" {
 
   filter {
     name   = var.ami_owner == null ? "product-code" : "owner-id"
-    values = [var.ami_owner == null ? "bz1yq0sc5ta99w5j7jjwzym8g" : var.ami_owner]
+    values = [var.ami_owner == null ? var.byol == null ? "bz1yq0sc5ta99w5j7jjwzym8g" : "a7z5gi2mkpzvo93r2e8csl2ld" : var.ami_owner]
   }
 
   filter {
@@ -164,7 +177,7 @@ resource "aws_launch_template" "discriminat" {
   }
 
   key_name  = var.key_pair_name
-  user_data = var.user_data_base64
+  user_data = var.user_data_base64 != null ? var.user_data_base64 : local.cloud_config == "" ? null : base64encode(local.cloud_config)
 
   tags = local.tags
 }
@@ -321,6 +334,19 @@ locals {
 
 locals {
   zones = [for z in data.aws_subnet.public_subnet : substr(z.availability_zone, -1, 1)]
+}
+
+locals {
+  cc_byol = var.byol == null ? "" : "- encoding: base64\n  path: /etc/chaser/licence-key.der\n  permissions: 0404\n  content: ${var.byol}\n"
+  cc_ashr = var.ashr == true ? "" : "- path: /etc/chaser/disable_automated-system-health-reporting\n  permissions: 0404\n"
+}
+
+locals {
+  cc_write_files = "${local.cc_byol}${local.cc_ashr}"
+}
+
+locals {
+  cloud_config = local.cc_write_files == "" ? "" : "#cloud-config\nwrite_files:\n${local.cc_write_files}"
 }
 
 ##
