@@ -12,6 +12,23 @@ module "discriminat" {
     "x"   = "y"
     "foo" = "bar"
   }
+
+  # iam_get_additional_ssm_params = [
+  #   "arn:aws:ssm:eu-west-2:000000000000:parameter/team1-list",
+  #   "arn:aws:ssm:eu-west-2:111111111111:parameter/service1-list"
+  # ]
+  # iam_get_additional_secrets = [
+  #   "arn:aws:secretsmanager:eu-west-2:000000000000:secret:service-a-allowed-egress-fqdns",
+  #   "arn:aws:secretsmanager:eu-west-2:111111111111:secret:service-b-allowed-egress-fqdns"
+  # ]
+
+  # preferences = <<EOF
+  # {
+  #   "%default": {
+  #     "flow_log_verbosity": "only_disallowed"
+  #   }
+  # }
+  # EOF
 }
 
 data "aws_subnet" "public" {

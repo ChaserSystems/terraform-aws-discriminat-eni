@@ -9,6 +9,21 @@ variable "public_subnets" {
 
 ## Defaults
 
+variable "preferences" {
+  type        = string
+  description = "Default preferences. See docs at https://chasersystems.com/docs/discriminat/aws/default-prefs/"
+  default     = <<EOF
+{
+  "%default": {
+    "wildcard_exposure": "prohibit_public_suffix",
+    "flow_log_verbosity": "full",
+    "see_thru": null,
+    "x509_crls": "ignore"
+  }
+}
+  EOF
+}
+
 variable "tags" {
   type        = map(any)
   description = "Map of key-value tag pairs to apply to resources created by this module. See examples for use."
@@ -36,13 +51,31 @@ variable "user_data_base64" {
 variable "ami_owner" {
   type        = string
   description = "Reserved for use with Chaser support. Allows overriding the source AMI account for DiscrimiNAT."
-  default     = null
+  default     = "aws-marketplace"
 }
 
-variable "ami_name" {
+variable "ami_version" {
   type        = string
-  description = "Reserved for use with Chaser support. Allows overriding the source AMI version for DiscrimiNAT."
-  default     = null
+  description = "Reserved for use with Chaser support. Allows overriding the source AMI version for DiscrimiNAT Firewall instances."
+  default     = "2.9.0"
+}
+
+variable "ami_auto_update" {
+  type        = bool
+  description = "Automatically look up and use the latest version of DiscrimiNAT image available from `ami_owner`. When this is set to `true`, `ami_version` is ignored."
+  default     = true
+}
+
+variable "iam_get_additional_ssm_params" {
+  type        = list(string)
+  description = "A list of additional SSM Parameters' full ARNs to apply the `ssm:GetParameter` Action to in the IAM Role for DiscrimiNAT. This is useful if an allowlist referred in a Security Group lives in one and is separately managed. `arn:aws:ssm:*:*:parameter/DiscrimiNAT*` is always included."
+  default     = []
+}
+
+variable "iam_get_additional_secrets" {
+  type        = list(string)
+  description = "A list of additional Secrets' full ARNs (in Secrets Manager) to apply the `secretsmanager:GetSecretValue` Action to in the IAM Role for DiscrimiNAT. This is useful if an allowlist referred in a Security Group lives in one and is separately managed."
+  default     = []
 }
 
 variable "byol" {
@@ -73,7 +106,7 @@ data "aws_vpc" "context" {
 }
 
 data "aws_ami" "discriminat" {
-  owners      = [var.ami_owner == null ? "aws-marketplace" : var.ami_owner]
+  owners      = [var.ami_owner]
   most_recent = true
 
   filter {
@@ -82,14 +115,24 @@ data "aws_ami" "discriminat" {
   }
 
   filter {
-    name   = var.ami_owner == null ? "product-code" : "owner-id"
-    values = [var.ami_owner == null ? var.byol == null ? "bz1yq0sc5ta99w5j7jjwzym8g" : "a7z5gi2mkpzvo93r2e8csl2ld" : var.ami_owner]
+    name   = var.ami_owner == "aws-marketplace" ? "product-code" : "owner-id"
+    values = [(var.ami_owner == "aws-marketplace" && var.byol == null) ? "bz1yq0sc5ta99w5j7jjwzym8g" : (var.ami_owner == "aws-marketplace" && var.byol != null) ? "a7z5gi2mkpzvo93r2e8csl2ld" : var.ami_owner]
   }
 
   filter {
     name   = "name"
-    values = var.ami_name == null ? ["DiscrimiNAT-2.8.*"] : [var.ami_name]
+    values = var.ami_auto_update ? ["DiscrimiNAT-*"] : ["DiscrimiNAT-${var.ami_version}"]
   }
+}
+
+##
+
+## Preferences
+
+resource "aws_ssm_parameter" "preferences" {
+  name           = "DiscrimiNAT"
+  type           = "String"
+  insecure_value = var.preferences
 }
 
 ##
@@ -233,51 +276,7 @@ resource "aws_iam_policy" "discriminat" {
     create_before_destroy = true
   }
 
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "logs:CreateLogGroup",
-                "logs:CreateLogStream",
-                "logs:PutLogEvents",
-                "logs:DescribeLogStreams"
-            ],
-            "Resource": [
-                "arn:aws:logs:*:*:log-group:DiscrimiNAT:log-stream:*"
-            ]
-        },
-        {
-            "Effect": "Allow",
-            "Action": "autoscaling:SetInstanceHealth",
-            "Resource": "arn:aws:autoscaling:*:*:autoScalingGroup:*:autoScalingGroupName/discriminat-*"
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
-                "ec2:DescribeNetworkInterfaces",
-                "ec2:DescribeSecurityGroups",
-                "ec2:DescribeAddresses"
-            ],
-            "Resource": "*"
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
-                "ec2:AssociateAddress"
-            ],
-            "Resource": "*",
-            "Condition": {
-                "Null": {
-                    "aws:ResourceTag/discriminat": false
-                }
-            }
-        }
-    ]
-}
-EOF
+  policy = local.iam_policy_json
 }
 
 resource "aws_iam_role" "discriminat" {
@@ -347,6 +346,14 @@ locals {
 
 locals {
   cloud_config = local.cc_write_files == "" ? "" : "#cloud-config\nwrite_files:\n${local.cc_write_files}"
+}
+
+locals {
+  iam_get_merged_ssm_params = concat(["arn:aws:ssm:*:*:parameter/DiscrimiNAT*"], var.iam_get_additional_ssm_params)
+  iam_get_json_ssm_params   = jsonencode(local.iam_get_merged_ssm_params)
+  iam_get_json_secrets      = jsonencode(var.iam_get_additional_secrets)
+
+  iam_policy_json = templatefile("${path.module}/iam_policy.json.tftpl", { iam_get_json_ssm_params = local.iam_get_json_ssm_params, iam_get_json_secrets = local.iam_get_json_secrets })
 }
 
 ##
