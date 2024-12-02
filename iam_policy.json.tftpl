@@ -49,6 +49,11 @@
       },
       "Effect": "Allow",
       "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "autoscaling:SetInstanceHealth",
+      "Resource": "arn:aws:autoscaling:*:*:autoScalingGroup:*:autoScalingGroupName/discriminat-*"
     }
   ],
   "Version": "2012-10-17"
