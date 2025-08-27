@@ -57,7 +57,7 @@ variable "ami_owner" {
 variable "ami_version" {
   type        = string
   description = "Reserved for use with Chaser support. Allows overriding the source AMI version for DiscrimiNAT Firewall instances."
-  default     = "2.9.0"
+  default     = "2.20"
 }
 
 variable "ami_auto_update" {
@@ -221,11 +221,6 @@ resource "aws_launch_template" "discriminat" {
 
   tag_specifications {
     resource_type = "instance"
-    tags          = merge(local.tags, { "discriminat" : "self-manage" })
-  }
-
-  tag_specifications {
-    resource_type = "network-interface"
     tags          = merge(local.tags, { "discriminat" : "self-manage" })
   }
 
