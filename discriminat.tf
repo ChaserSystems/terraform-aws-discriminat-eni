@@ -229,11 +229,6 @@ resource "aws_launch_template" "discriminat" {
   }
 
   tag_specifications {
-    resource_type = "network-interface"
-    tags          = merge(local.tags, { "discriminat" : "%default" })
-  }
-
-  tag_specifications {
     resource_type = "volume"
     tags          = local.tags
   }
