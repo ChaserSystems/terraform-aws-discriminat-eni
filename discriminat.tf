@@ -32,7 +32,7 @@ variable "tags" {
 
 variable "instance_size" {
   type        = string
-  description = "The default of t3.small should suffice for light to medium levels of usage. Anything less than 2 CPU cores and 2 GB of RAM is not recommended. For faster access to the Internet and for accounts with a large number of VMs, you may want to choose a machine type with dedicated CPU cores. Valid values are t3.small , c6i.large , c6i.xlarge , c6a.large , c6a.xlarge ."
+  description = "The default of t3.small should suffice for light to medium levels of usage. Anything less than 2 CPU cores and 2 GB of RAM is not recommended. For faster access to the Internet, hundreds of FQDNs in the allowlists, or VPCs with a large number of ENIs, you should choose a machine type with dedicated CPU cores. Valid values are t3.small , c6i.large , c6i.xlarge , c6a.large , c6a.xlarge ."
   default     = "t3.small"
 }
 
@@ -57,7 +57,7 @@ variable "ami_owner" {
 variable "ami_version" {
   type        = string
   description = "Reserved for use with Chaser support. Allows overriding the source AMI version for DiscrimiNAT Firewall instances."
-  default     = "2.30"
+  default     = "2.40"
 }
 
 variable "ami_auto_update" {
@@ -154,6 +154,7 @@ resource "aws_network_interface" "static_egress" {
 
 resource "aws_security_group" "discriminat" {
   name_prefix = "discriminat-"
+  description = "firewall rules for the DiscrimiNAT Firewall instances themselves; NOT for clients or apps"
   lifecycle {
     create_before_destroy = true
   }
@@ -165,6 +166,7 @@ resource "aws_security_group" "discriminat" {
     to_port     = 65535
     protocol    = "tcp"
     cidr_blocks = [data.aws_vpc.context.cidr_block]
+    description = "internet-bound TCP connections from any host in the VPC"
   }
 
   ingress {
@@ -180,6 +182,7 @@ resource "aws_security_group" "discriminat" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "DiscrimiNAT Firewall itself to internet forwarding on behalf of other hosts"
   }
 
   tags = local.tags
@@ -202,8 +205,9 @@ resource "aws_launch_template" "discriminat" {
   }
 
   metadata_options {
-    http_endpoint = "enabled"
-    http_tokens   = "required"
+    http_endpoint          = "enabled"
+    http_tokens            = "required"
+    instance_metadata_tags = "enabled"
   }
 
   block_device_mappings {
@@ -221,7 +225,7 @@ resource "aws_launch_template" "discriminat" {
 
   tag_specifications {
     resource_type = "instance"
-    tags          = merge(local.tags, { "discriminat" : "self-manage" })
+    tags          = merge(local.tags, { "discriminat" : "%default" })
   }
 
   tag_specifications {
@@ -339,7 +343,8 @@ locals {
   tags = merge(
     {
       "Name" : "DiscrimiNAT",
-      "documentation" : "https://chasersystems.com/docs/"
+      "documentation" : "https://chasersystems.com/docs/",
+      "llms_txt" : "https://chasersystems.com/llms.txt"
     },
     var.tags
   )

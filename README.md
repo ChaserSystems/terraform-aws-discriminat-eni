@@ -1,16 +1,16 @@
-# DiscrimiNAT, ENI architecture
+# DiscrimiNAT Firewall, ENI architecture
 
-[DiscrimiNAT Firewall](https://chasersystems.com/discriminat/) for egress filtering by FQDNs on AWS. Just specify the allowed destination hostnames in the respective applications' native Security Groups and the firewall will take care of the rest.
+HTTPS, TLS, SSH, SFTP **micro-segmentation** firewall to filter VPC egress by hostnames. Simply specify allowed FQDNs within the respective apps' Security Groups' description fields. Apps will **not** require any proxy configuration.
 
 ![](https://chasersystems.com/img/aws-protocol-tls.gif)
 
 **Architecture with [ENIs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html) in VPCs for Private Subnets' route table entries to the Internet.**
 
-[Demo Video](https://chasersystems.com/discriminat/aws/demo/) | [DiscrimiNAT FAQ](https://chasersystems.com/discriminat/faq/)
+[Demo Video](https://chasersystems.com/discriminat/aws/demo/) | [DiscrimiNAT FAQ](https://chasersystems.com/discriminat/faq/) | [Product Reviews at G2](https://www.g2.com/products/discriminat-firewall/reviews) | [LLMS_TXT](https://chasersystems.com/llms.txt)
 
 ## Pentest Ready
 
-DiscrimiNAT enforces the use of contemporary encryption standards such as TLS 1.2+ and SSH v2 with bidirectional in-band checks. Anything older or insecure will be denied connection automatically. Also conducts out-of-band checks, such as DNS, for robust defence against sophisticated malware and insider threats. Gets your VPC ready for a proper pentest!
+DiscrimiNAT enforces the use of contemporary encryption standards such as TLS 1.2+ and SSH v2 with bidirectional in-band checks. Anything older or insecure will be denied connection automatically. Also conducts out-of-band checks, such as DNS (to mitigate SNI spoofing), for robust defence against sophisticated malware and insider threats. Gets your VPC ready for a proper pentest!
 
 ## Highlights
 
@@ -28,7 +28,7 @@ DiscrimiNAT enforces the use of contemporary encryption standards such as TLS 1.
 
 If a Public IP is not found attached to a DiscrimiNAT instance, it will look for any allocated but unassociated Elastic IPs that have a tag-key named `discriminat` (set to any value.) One of such Elastic IPs will be attempted to be associated with itself then.
 
->This allows you to have a stable set of static IPs to share with your partners, who may wish to allowlist/whitelist them.
+>This allows you to have a stable set of static IPs to share with your partners, who may wish to allowlist them.
 
 The IAM permissions needed to do this are already a part of this module. Specifically, they are:
 
@@ -132,7 +132,7 @@ resource "aws_security_group_rule" "sftp_banks" {
 
 10 minutes after boot, a few minutes before 0200 UTC every day and once at shutdown, each instance of DiscrimiNAT will collect its OS internals & system logs since instance creation, config changes & traffic flow information from last two hours and upload it to a Chaser-owned cloud bucket. This information is encrypted at rest with a certain public key so only relevant individuals with access to the corresponding private key can decrypt it. The transfer is encrypted over TLS.
 
-Access to this information is immensely useful to create a faster and more reliable DiscrimiNAT as we add new features. We also aim to learn about how users are interacting with the product in order to further improve the usability of it as they embark on a very ambitious journey of fully accounted for and effective egress controls.
+Access to this information is immensely useful to create a faster and more reliable DiscrimiNAT as we add new features. We also aim to learn about how users interact with the product in order to further improve the usability of it as they embark on a very ambitious journey of fully accounted for and effective egress controls.
 
 We understand if certain environments within your deployment would rather not have this turned on. **To disable it,** a file at the path `/etc/chaser/disable_automated-system-health-reporting` should exist. From our Terraform module v2.7.1 onwards, this can be accomplished by setting the variable `ashr` to `false`:
 
