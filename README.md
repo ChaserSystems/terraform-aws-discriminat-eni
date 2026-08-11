@@ -1,4 +1,6 @@
-# DiscrimiNAT Firewall, ENI architecture
+# DiscrimiNAT OTF, ENI architecture
+
+OTF means **Outbound Traffic Filtering**. Also see [MITRE D3FEND D3-OTF](https://d3fend.mitre.org/technique/d3f:OutboundTrafficFiltering/).
 
 HTTPS, TLS, SSH, SFTP **micro-segmentation** firewall to filter VPC egress by hostnames. Simply specify allowed FQDNs within the respective apps' Security Groups' description fields. Apps will **not** require any proxy configuration.
 
@@ -22,7 +24,7 @@ DiscrimiNAT enforces the use of contemporary encryption standards such as TLS 1.
 
 * A deployment per zone is advised, just like the AWS NAT Gateways – which are not needed with DiscrimiNAT deployed.
 * VMs and Lambdas _without_ public IPs will need to be in a subnet (typically the Private Subnet) with routing through the ENIs created by this module to access the Internet at all.
-* You must be subscribed to the [DiscrimiNAT Firewall from the AWS Marketplace](https://aws.amazon.com/marketplace/pp/prodview-7ulmdnoq5jnwu).
+* You must be subscribed to the [DiscrimiNAT OTF from the AWS Marketplace](https://aws.amazon.com/marketplace/pp/prodview-7ulmdnoq5jnwu).
 
 ## Elastic IPs
 
@@ -70,7 +72,7 @@ resource "aws_security_group_rule" "saas_monitoring" {
   to_port   = 443
   protocol  = "tcp"
 
-  # The DiscrimiNAT Firewall will apply its own checks anyway, so you could
+  # DiscrimiNAT will apply its own checks anyway, so you could
   # choose to leave this wide open without worry.
   cidr_blocks = ["0.0.0.0/0"]
 
