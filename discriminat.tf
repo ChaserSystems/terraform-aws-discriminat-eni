@@ -2,7 +2,7 @@
 
 variable "public_subnets" {
   type        = list(string)
-  description = "The IDs of the Public Subnets to deploy the DiscrimiNAT Firewall instances in. These must have routing to the Internet via an Internet Gateway already."
+  description = "The IDs of the Public Subnets to deploy DiscrimiNAT instances in. These must have routing to the Internet via an Internet Gateway already."
 }
 
 ##
@@ -36,6 +36,12 @@ variable "instance_size" {
   default     = "t3.small"
 }
 
+variable "additional_security_group_ids" {
+  type        = list(string)
+  description = "Optional list of additional Security Group IDs to attach to DiscrimiNAT instances."
+  default     = []
+}
+
 variable "key_pair_name" {
   type        = string
   description = "Strongly suggested to leave this to the default, that is to NOT associate any key-pair with the instances. In case SSH access is desired, provide the name of a valid EC2 Key Pair."
@@ -56,8 +62,8 @@ variable "ami_owner" {
 
 variable "ami_version" {
   type        = string
-  description = "Reserved for use with Chaser support. Allows overriding the source AMI version for DiscrimiNAT Firewall instances."
-  default     = "2.40"
+  description = "Reserved for use with Chaser support. Allows overriding the source AMI version for DiscrimiNAT instances."
+  default     = "2.50"
 }
 
 variable "ami_auto_update" {
@@ -147,14 +153,14 @@ resource "aws_network_interface" "static_egress" {
   subnet_id         = var.public_subnets[count.index]
   source_dest_check = false
 
-  security_groups = [aws_security_group.discriminat.id]
+  security_groups = concat([aws_security_group.discriminat.id], var.additional_security_group_ids)
 
   tags = local.tags
 }
 
 resource "aws_security_group" "discriminat" {
   name_prefix = "discriminat-"
-  description = "firewall rules for the DiscrimiNAT Firewall instances themselves; NOT for clients or apps"
+  description = "firewall rules for DiscrimiNAT instances themselves; NOT for clients or apps"
   lifecycle {
     create_before_destroy = true
   }
@@ -182,7 +188,7 @@ resource "aws_security_group" "discriminat" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "DiscrimiNAT Firewall itself to internet forwarding on behalf of other hosts"
+    description = "DiscrimiNAT itself to the internet forwarding on behalf of other hosts"
   }
 
   tags = local.tags
